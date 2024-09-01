@@ -1,14 +1,14 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv'
+import dotenv from 'dotenv';
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
 app.use(cors());
-dotenv.config()
+dotenv.config();
 
 const uri = process.env.DB_URL;
 
@@ -23,6 +23,29 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
+
+    const database = client.db('Foodlane');
+    const FoodCollection = database.collection('foodData');
+    const userCollection = database.collection('User');
+
+    app.get('/foodData', async (req, res) => {
+      const result = await FoodCollection.find().toArray();
+
+      res.send(result);
+    });
+
+    app.get('/foodDataCount', async (req, res) => {
+      const count = await FoodCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
+
+    // user post request
+    app.post('/user', async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
     console.log(
       'Pinged your deployment. You successfully connected to MongoDB!'
     );
