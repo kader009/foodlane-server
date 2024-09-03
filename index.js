@@ -27,6 +27,7 @@ async function run() {
     const database = client.db('Foodlane');
     const FoodCollection = database.collection('foodData');
     const userCollection = database.collection('User');
+    const orderCollection = database.collection('Order');
 
     app.get('/foodData', async (req, res) => {
       // console.log(req.query.email);
@@ -55,12 +56,29 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/foodData/get/:id', async (req, res) => { 
-      const id = req.params.id;
-      // console.log(id); 
-      const result = await FoodCollection.findOne({ _id: new ObjectId(id) }); 
+    // order post route
+    app.post('/orders', async (req, res) => {
+      const order = req.body;
+      const result = await orderCollection.insertOne(order);
       res.send(result);
-    }); 
+    });
+
+    app.get('/foodData/get/:id', async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const result = await FoodCollection.findOne({ _id: new ObjectId(id) });
+      res.send(result);
+    });
+
+    app.patch('/foodData/:id', async (req, res) => {
+      const id = req.params.id;
+      const updateFood = req.body;
+      const result = await FoodCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateFood }
+      );
+      res.send(result);
+    });
 
     // user post request
     app.post('/user', async (req, res) => {
