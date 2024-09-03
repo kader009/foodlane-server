@@ -1,4 +1,4 @@
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -28,8 +28,8 @@ async function run() {
     const FoodCollection = database.collection('foodData');
     const userCollection = database.collection('User');
 
-    app.get('/foodData', async (req, res) => { 
-      console.log(req.query.email);
+    app.get('/foodData', async (req, res) => {
+      // console.log(req.query.email);
       let query = {};
 
       if (req.query?.email) {
@@ -41,18 +41,26 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/foodData/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await FoodCollection.findOne(query);
+      res.send(result);
+    });
 
     // post fooddata
-    app.post('/foodData', async(req, res) =>{
+    app.post('/foodData', async (req, res) => {
       const food = req.body;
-      const result = await FoodCollection.insertOne(food)
-      res.send(result)
-    })
-
-    app.get('/foodDataCount', async (req, res) => {
-      const count = await FoodCollection.estimatedDocumentCount();
-      res.send({ count });
+      const result = await FoodCollection.insertOne(food);
+      res.send(result);
     });
+
+    app.get('/foodData/get/:id', async (req, res) => { 
+      const id = req.params.id;
+      // console.log(id); 
+      const result = await FoodCollection.findOne({ _id: new ObjectId(id) }); 
+      res.send(result);
+    }); 
 
     // user post request
     app.post('/user', async (req, res) => {
