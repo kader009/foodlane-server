@@ -63,6 +63,23 @@ async function run() {
       res.send(result);
     });
 
+    app.get('/orders', async (req, res) => {
+      console.log(req.query.email);
+      // const order = req.body;
+      let query = {};
+      if (req?.query?.email) {
+        query = { buyerEmail: req.query.email };
+      }
+      const result = await orderCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.delete('/orders/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await orderCollection.deleteOne({_id: new ObjectId(id)});
+      res.send(result)
+    });
+
     app.get('/foodData/get/:id', async (req, res) => {
       const id = req.params.id;
       // console.log(id);
