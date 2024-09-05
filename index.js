@@ -1,13 +1,19 @@
-import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
+import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb'; 
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; 
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173'],
+  credentials: true
+}));
+app.use(cookieParser());
 dotenv.config();
 
 const uri = process.env.DB_URL;
@@ -29,18 +35,46 @@ async function run() {
     const userCollection = database.collection('User');
     const orderCollection = database.collection('Order');
 
+    // jwt
+    app.post('/jwt', (req,res) =>{
+      const user = req.body;
+      const token = jwt.sign(user, process.env.TOKEN_SECRET, {expiresIn:'1h'})
+      console.log(token);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure:false,
+        sameSite:true,
+      }).send({success:true})
+    })
+
+
     app.get('/foodData', async (req, res) => {
-      // console.log(req.query.email);
       let query = {};
-
+    
       if (req.query?.email) {
-        query = { 'addBy.email': req.query.email };
+        query = { 'addBy.email': req.query.email }; 
       }
-
-      const result = await FoodCollection.find(query).toArray();
-
-      res.send(result);
+    
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+    
+      const totalItems = await FoodCollection.countDocuments(query);
+      const totalPages = Math.ceil(totalItems / limit);
+    
+      const result = await FoodCollection.find(query)
+        .skip(skip) 
+        .limit(limit) 
+        .toArray();
+    
+      res.send({
+        foods: result,
+        currentPage: page,
+        totalPages: totalPages,
+        totalItems: totalItems,
+      });
     });
+    
 
     app.get('/foodData/:id', async (req, res) => {
       const id = req.params.id;
@@ -65,6 +99,7 @@ async function run() {
 
     app.get('/orders', async (req, res) => {
       console.log(req.query.email);
+      console.log('token', req.cookies.token); 
       // const order = req.body;
       let query = {};
       if (req?.query?.email) {
