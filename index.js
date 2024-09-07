@@ -1,7 +1,7 @@
 import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb'; 
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv'; 
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
 const app = express();
@@ -9,10 +9,12 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
-app.use(cors({
-  origin: ['http://localhost:5173'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: ['http://localhost:5173'],
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 dotenv.config();
 
@@ -35,38 +37,42 @@ async function run() {
     const userCollection = database.collection('User');
     const orderCollection = database.collection('Order');
 
-    // jwt
-    app.post('/jwt', (req,res) =>{
+    // jwt implement
+    app.post('/jwt', (req, res) => {
       const user = req.body;
-      const token = jwt.sign(user, process.env.TOKEN_SECRET, {expiresIn:'1h'})
+      const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+        expiresIn: '1h',
+      });
       console.log(token);
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure:false,
-        sameSite:true,
-      }).send({success:true})
-    })
+      res
+        .cookie('token', token, {
+          httpOnly: true,
+          secure: false,
+          sameSite: true,
+        })
+        .send({ success: true });
+    });
 
-
+    // get food data with query
     app.get('/foodData', async (req, res) => {
       let query = {};
-    
+
       if (req.query?.email) {
-        query = { 'addBy.email': req.query.email }; 
+        query = { 'addBy.email': req.query.email };
       }
-    
+
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const skip = (page - 1) * limit;
-    
+
       const totalItems = await FoodCollection.countDocuments(query);
       const totalPages = Math.ceil(totalItems / limit);
-    
+
       const result = await FoodCollection.find(query)
-        .skip(skip) 
-        .limit(limit) 
+        .skip(skip)
+        .limit(limit)
         .toArray();
-    
+
       res.send({
         foods: result,
         currentPage: page,
@@ -74,8 +80,8 @@ async function run() {
         totalItems: totalItems,
       });
     });
-    
 
+    // food data by single id
     app.get('/foodData/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -97,9 +103,10 @@ async function run() {
       res.send(result);
     });
 
+    // get orders
     app.get('/orders', async (req, res) => {
       console.log(req.query.email);
-      console.log('token', req.cookies.token); 
+      console.log('token', req.cookies.token);
       // const order = req.body;
       let query = {};
       if (req?.query?.email) {
@@ -109,12 +116,14 @@ async function run() {
       res.send(result);
     });
 
+    // delete single order by id
     app.delete('/orders/:id', async (req, res) => {
       const id = req.params.id;
-      const result = await orderCollection.deleteOne({_id: new ObjectId(id)});
-      res.send(result)
+      const result = await orderCollection.deleteOne({ _id: new ObjectId(id) });
+      res.send(result);
     });
 
+    // get food data with speacial params and id
     app.get('/foodData/get/:id', async (req, res) => {
       const id = req.params.id;
       // console.log(id);
@@ -122,6 +131,7 @@ async function run() {
       res.send(result);
     });
 
+    // update food data by single id
     app.patch('/foodData/:id', async (req, res) => {
       const id = req.params.id;
       const updateFood = req.body;
