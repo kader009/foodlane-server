@@ -1,4 +1,4 @@
-import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb'; 
+import { MongoClient, ObjectId, ServerApiVersion } from 'mongodb';
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -17,6 +17,31 @@ app.use(
 );
 app.use(cookieParser());
 dotenv.config();
+
+// middleware
+const logger = (req, res, next) => {
+  next();
+};
+
+const VerifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  console.log('value of token', token);
+
+  if (!token) {
+    return res.status(401).send({ message: 'unauthorized' });
+  }
+
+  jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: 'unauthorized' });
+    }
+
+    console.log('value in the token:', decoded);
+    
+    next();
+  });
+
+};
 
 const uri = process.env.DB_URL;
 
@@ -57,8 +82,8 @@ async function run() {
     app.get('/foodData', async (req, res) => {
       let query = {};
 
-      if (req.query?.email) { 
-        query = { 'addBy.email': req.query.email }; 
+      if (req.query?.email) {
+        query = { 'addBy.email': req.query.email };
       }
 
       const page = parseInt(req.query.page) || 1;
@@ -73,7 +98,7 @@ async function run() {
         .limit(limit)
         .toArray();
 
-        // new update
+      // new update
 
       res.send({
         foods: result,
@@ -106,9 +131,9 @@ async function run() {
     });
 
     // get orders
-    app.get('/orders', async (req, res) => {
-      console.log(req.query.email);
-      console.log('token', req.cookies.token);
+    app.get('/orders', logger, VerifyToken, async (req, res) => {
+      // console.log(req.query.email);
+      // console.log('token', req.cookies.token);
       // const order = req.body;
       let query = {};
       if (req?.query?.email) {
