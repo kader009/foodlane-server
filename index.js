@@ -131,10 +131,12 @@ async function run() {
 
     // get orders
     app.get('/orders', logger, VerifyToken, async (req, res) => {
-      // console.log(req.query.email);
-      // console.log('token', req.cookies.token);
-      // const order = req.body;
+      if (req.query.email !== req.user.email) {
+        return res.status(401).send({ message: 'forbidden access' });
+      }
+
       let query = {};
+
       if (req?.query?.email) {
         query = { buyerEmail: req.query.email };
       }
@@ -152,7 +154,6 @@ async function run() {
     // get food data with speacial params and id
     app.get('/foodData/get/:id', async (req, res) => {
       const id = req.params.id;
-      // console.log(id);
       const result = await FoodCollection.findOne({ _id: new ObjectId(id) });
       res.send(result);
     });
