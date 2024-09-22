@@ -37,10 +37,9 @@ const VerifyToken = async (req, res, next) => {
     }
 
     console.log('value in the token:', decoded);
-    
+    req.user = decoded;
     next();
   });
-
 };
 
 const uri = process.env.DB_URL;
