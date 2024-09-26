@@ -11,14 +11,14 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: ['http://localhost:5173','https://foodlane-server-lilac.vercel.app'],
+    origin: ['http://localhost:5173','https://foodlane-server-lilac.vercel.app/'],
     credentials: true,
   })
 );
 app.use(cookieParser());
 dotenv.config();
 
-// middleware
+// middleware add
 const logger = (req, res, next) => {
   next();
 };
