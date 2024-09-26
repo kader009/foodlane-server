@@ -18,6 +18,21 @@ app.use(
 app.use(cookieParser());
 dotenv.config();
 
+// userd
+app.use((req, res, next) => {
+  res.header(
+  'Access-Control-Allow-Origin',
+  'clientURL'
+  );
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  
+  console.log('Request received:', req.method, req.url);
+  
+  next();
+  });
+
 // middleware add
 const logger = (req, res, next) => {
   next();
