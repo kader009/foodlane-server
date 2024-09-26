@@ -132,7 +132,7 @@ async function run() {
     // get orders
     app.get('/orders', logger, VerifyToken, async (req, res) => {
       if (req.query.email !== req.user.email) {
-        return res.status(401).send({ message: 'forbidden access' });
+        return res.status(403).send({ message: 'forbidden access' });
       }
 
       let query = {};
@@ -172,14 +172,19 @@ async function run() {
     // user post request
     app.post('/user', async (req, res) => {
       const user = req.body;
-      const { email } = user;
-      const exists = await userCollection.findOne({ email });
+      const exists = await userCollection.findOne({ email: user?.email });
 
-      if (exists) {
+      if (exists?._id) {
         return res.send('user already exists');
       }
 
       const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // users related api
+    app.get('/user', logger, VerifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray();
       res.send(result);
     });
 
