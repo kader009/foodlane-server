@@ -27,23 +27,38 @@ const logger = (req, res, next) => {
 };
 
 const VerifyToken = async (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.token; // Get token from cookies
   console.log('value of token', token);
 
+  // If token is not present, respond with unauthorized
   if (!token) {
     return res.status(401).send({ message: 'unauthorized' });
   }
 
+  // Verify the JWT token
   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
     if (err) {
+      // Check if the error is due to token expiration
+      if (err.name === 'TokenExpiredError') {
+        res.clearCookie('token');
+        
+        // Respond with token expired message and status 401
+        return res.status(401).send({ message: 'token expired' });
+      }
+
+      // If any other error occurs, return unauthorized
       return res.status(401).send({ message: 'unauthorized' });
     }
 
+    // If token is valid, attach the user to the request object
     console.log('value in the token:', decoded);
     req.user = decoded;
+    
+    // Proceed to the next middleware or route handler
     next();
   });
 };
+
 
 const uri = process.env.DB_URL;
 
