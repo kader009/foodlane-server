@@ -88,7 +88,7 @@ async function run() {
       console.log(token);
       res
         .cookie('token', token, {
-          httpOnly: false,
+          httpOnly: true,
           secure: true,
           sameSite: 'strict',
         })
