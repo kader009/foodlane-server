@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
-      'https://foodlane-server-api.onrender.com',
+      'https://food-lane-zeta.vercel.app',
     ],
     credentials: true,
   })
