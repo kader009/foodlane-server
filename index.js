@@ -11,10 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: [
-      'http://localhost:5173',
-      'https://foodlane-server-api.onrender.com',
-    ],
+    origin: '*',
     methods: ['GET','POST','PATCH','DELETE'],
     credentials: true,
   })
