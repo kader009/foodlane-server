@@ -15,7 +15,6 @@ app.use(
       'http://localhost:5173',
       'https://foodlane-server-api.onrender.com',
     ],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
     credentials: true,
   })
 );
