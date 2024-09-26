@@ -22,17 +22,6 @@ app.use(
 app.use(cookieParser());
 dotenv.config();
 
-// app use
-app.use((req, res, next) => {
-  res.setHeader(
-    'Access-Control-Allow-Origin',
-    'https://foodlane-server-api.onrender.com'
-  );
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, PUT');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  next();
-});
-
 // middleware add
 const logger = (req, res, next) => {
   next();
