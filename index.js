@@ -11,10 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(
   cors({
-    origin: [
-      'http://localhost:5173',
-      'https://food-lane-zeta.vercel.app',
-    ],
+    origin: ['http://localhost:5173', 'https://food-lane-zeta.vercel.app'],
     credentials: true,
   })
 );
@@ -26,39 +23,38 @@ const logger = (req, res, next) => {
   next();
 };
 
-const VerifyToken = async (req, res, next) => {
-  const token = req.cookies?.token; // Get token from cookies
-  console.log('value of token', token);
+// const VerifyToken = async (req, res, next) => {
+//   const token = req.cookies?.token; // Get token from cookies
+//   console.log('value of token:', token);
 
-  // If token is not present, respond with unauthorized
-  if (!token) {
-    return res.status(401).send({ message: 'unauthorized' });
-  }
+//   // If token is not present, respond with unauthorized
+//   if (!token) {
+//     return res.status(401).send({ message: 'unauthorized' });
+//   }
 
-  // Verify the JWT token
-  jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
-    if (err) {
-      // Check if the error is due to token expiration
-      if (err.name === 'TokenExpiredError') {
-        res.clearCookie('token');
-        
-        // Respond with token expired message and status 401
-        return res.status(401).send({ message: 'token expired' });
-      }
+//   // Verify the JWT token
+//   jwt.verify(token, process.env.TOKEN_SECRET, (err, decoded) => {
+//     if (err) {
+//       // Check if the error is due to token expiration
+//       if (err.name === 'TokenExpiredError') {
+//         res.clearCookie('token');
 
-      // If any other error occurs, return unauthorized
-      return res.status(401).send({ message: 'unauthorized' });
-    }
+//         // Respond with token expired message and status 401
+//         return res.status(401).send({ message: 'token expired' });
+//       }
 
-    // If token is valid, attach the user to the request object
-    console.log('value in the token:', decoded);
-    req.user = decoded;
-    
-    // Proceed to the next middleware or route handler
-    next();
-  });
-};
+//       // If any other error occurs, return unauthorized
+//       return res.status(401).send({ message: 'unauthorized' });
+//     }
 
+//     // If token is valid, attach the user to the request object
+//     console.log('value in the token:', decoded);
+//     req.user = decoded;
+
+//     // Proceed to the next middleware or route handler
+//     next();
+//   });
+// };
 
 const uri = process.env.DB_URL;
 
@@ -80,20 +76,20 @@ async function run() {
     const orderCollection = database.collection('Order');
 
     // jwt implement
-    app.post('/jwt', (req, res) => {
-      const user = req.body;
-      const token = jwt.sign(user, process.env.TOKEN_SECRET, {
-        expiresIn: '1h',
-      });
-      console.log(token);
-      res
-        .cookie('token', token, {
-          httpOnly: true,
-          secure: true,
-          sameSite: 'strict',
-        })
-        .send({ success: true });
-    });
+    // app.post('/jwt', (req, res) => {
+    //   const user = req.body;
+    //   const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+    //     expiresIn: '1h',
+    //   });
+    //   console.log(token);
+    //   res
+    //     .cookie('token', token, {
+    //       httpOnly: true,
+    //       secure: false,
+    //       sameSite: true,
+    //     })
+    //     .send({ success: true });
+    // });
 
     // get food data with query
     app.get('/foodData', async (req, res) => {
@@ -148,10 +144,10 @@ async function run() {
     });
 
     // get orders
-    app.get('/orders', logger, VerifyToken, async (req, res) => {
-      if (req.query.email !== req.user.email) {
-        return res.status(403).send({ message: 'forbidden access' });
-      }
+    app.get('/orders', logger,  async (req, res) => {
+      // if (req.query.email !== req.user.email) {
+      //   return res.status(403).send({ message: 'forbidden access' });
+      // }
 
       let query = {};
 
@@ -201,7 +197,7 @@ async function run() {
     });
 
     // users related api
-    app.get('/user', logger, VerifyToken, async (req, res) => {
+    app.get('/user', logger,  async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
