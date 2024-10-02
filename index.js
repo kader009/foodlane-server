@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
+import Stripe from 'stripe';
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -17,6 +18,9 @@ app.use(
 );
 app.use(cookieParser());
 dotenv.config();
+
+// initailize stripe
+const stripe = new Stripe(process.env.STRIPE_SECRET);
 
 // middleware add
 const logger = (req, res, next) => {
@@ -74,6 +78,7 @@ async function run() {
     const FoodCollection = database.collection('foodData');
     const userCollection = database.collection('User');
     const orderCollection = database.collection('Order');
+    const paymentCollection = database.collection('payment');
 
     // jwt implement
     // app.post('/jwt', (req, res) => {
@@ -144,7 +149,7 @@ async function run() {
     });
 
     // get orders
-    app.get('/orders', logger,  async (req, res) => {
+    app.get('/orders', logger, async (req, res) => {
       // if (req.query.email !== req.user.email) {
       //   return res.status(403).send({ message: 'forbidden access' });
       // }
@@ -197,7 +202,7 @@ async function run() {
     });
 
     // users related api
-    app.get('/user', logger,  async (req, res) => {
+    app.get('/user', logger, async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
@@ -217,6 +222,87 @@ async function run() {
       }
 
       res.send(user);
+    });
+
+    // payment intent
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+
+      if (!price || isNaN(price)) {
+        return res
+          .status(400)
+          .send({ error: 'Invalid price sent from client' });
+      }
+
+      const amount = parseInt(price * 100);
+      console.log('from server', amount);
+
+      try {
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: 'usd',
+          payment_method_types: ['card'],
+        });
+
+        res.send({
+          clientSecret: paymentIntent.client_secret,
+        });
+      } catch (error) {
+        console.error('Error creating payment intent:', error);
+        res.status(500).send({ error: 'Payment intent creation failed' });
+      }
+    });
+
+    // payment
+    app.post('/payment', async (req, res) => {
+      const payment = req.body;
+      const email = payment.email; // Assume the user's email is part of the payment object
+
+      try {
+        const paymentResult = await paymentCollection.insertOne(payment);
+
+        // Fetch all orders for the user from the orderCollection
+        const userOrders = await orderCollection
+          .find({ buyerEmail: email })
+          .toArray();
+
+        // If the user has no orders, return an error
+        if (!userOrders || userOrders.length === 0) {
+          return res
+            .status(404)
+            .send({ error: 'No orders found for the user' });
+        }
+
+        // Update the payment document with the user's orders
+        await paymentCollection.updateOne(
+          { _id: paymentResult.insertedId },
+          { $set: { orders: userOrders } }
+        );
+
+        // Delete the user's orders from the orderCollection after successful payment
+        const deleteResult = await orderCollection.deleteMany({
+          buyerEmail: email,
+        });
+
+        console.log(
+          `Deleted ${deleteResult.deletedCount} orders for the user ${email}`
+        );
+
+        res.send({
+          success: true,
+          message: 'Payment processed and orders cleared',
+        });
+      } catch (error) {
+        console.error('Error processing payment and clearing orders:', error);
+        res.status(500).send({ error: 'Payment processing failed' });
+      }
+    });
+
+    // payment get
+    app.get('/payment/:email', async (req, res) => {
+      const query = { email: req?.params?.email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
     });
 
     console.log(
