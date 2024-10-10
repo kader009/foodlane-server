@@ -321,3 +321,5 @@ app.get('/', (req, res) => {
 app.listen(port, (req, res) => {
   console.log(`restaurant is on port ${port}`);
 });
+
+export default app;
