@@ -23,9 +23,9 @@ dotenv.config();
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 
 // middleware add
-const logger = (req, res, next) => {
-  next();
-};
+// const logger = (req, res, next) => {
+//   next();
+// };
 
 // const VerifyToken = async (req, res, next) => {
 //   const token = req.cookies?.token; // Get token from cookies
@@ -100,7 +100,7 @@ async function run() {
     app.get('/foodData', async (req, res) => {
       let query = {};
 
-      if (req.query?.email) { 
+      if (req.query?.email) {
         query = { 'addBy.email': req.query.email };
       }
 
@@ -149,7 +149,7 @@ async function run() {
     });
 
     // get orders
-    app.get('/orders', logger, async (req, res) => {
+    app.get('/orders', async (req, res) => {
       // if (req.query.email !== req.user.email) {
       //   return res.status(403).send({ message: 'forbidden access' });
       // }
@@ -202,7 +202,7 @@ async function run() {
     });
 
     // users related api
-    app.get('/user', logger, async (req, res) => {
+    app.get('/user', async (req, res) => {
       const result = await userCollection.find().toArray();
       res.send(result);
     });
