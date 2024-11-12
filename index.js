@@ -100,7 +100,7 @@ async function run() {
     app.get('/foodData', async (req, res) => {
       let query = {};
 
-      if (req.query?.email) {
+      if (req.query?.email) { 
         query = { 'addBy.email': req.query.email };
       }
 
