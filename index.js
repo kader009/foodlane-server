@@ -307,7 +307,6 @@ async function run() {
 
     console.log('You successfully connected to MongoDB!');
   } finally {
-    // await client.close();
   }
 }
 run().catch(console.dir);
